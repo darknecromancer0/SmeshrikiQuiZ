@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Викторина: безумные идеи</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg0:#070617;--bg1:#11102e;--bg2:#1a1640;--ink:#ECECF8;--muted:#9A99C0;--faint:#6a698f;--line:rgba(255,255,255,.10);--surf:rgba(255,255,255,.04);--accent:#FFD27A;--c:#8FC9FF;--ok:#6EE7A8;--no:#FF7A5C;--miss:#FFC24B}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--bg0)}
+  body{font-family:"Inter",system-ui,sans-serif;color:var(--ink);min-height:100vh;overflow-x:hidden;
+    background:radial-gradient(1100px 560px at 50% -8%,rgba(140,170,255,.18),transparent 60%),radial-gradient(820px 460px at 88% 16%,rgba(255,210,122,.07),transparent 55%),linear-gradient(180deg,var(--bg0),var(--bg1) 55%,var(--bg2));background-attachment:fixed;padding:0 15px 56px}
+  #stars{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+  .star{position:absolute;border-radius:50%;background:radial-gradient(circle,#fff 30%,rgba(255,255,255,0) 75%);pointer-events:auto;cursor:pointer;animation:drift linear infinite,tw ease-in-out infinite}
+  @keyframes drift{0%,100%{transform:translate(0,0)}50%{transform:translate(var(--dx),var(--dy))}}
+  @keyframes tw{0%,100%{opacity:.3}50%{opacity:.9}}
+  .star.boom{animation:boom .6s ease-out forwards}
+  @keyframes boom{0%{transform:scale(1);opacity:1;box-shadow:0 0 6px 2px #fff}40%{transform:scale(4);opacity:1;box-shadow:0 0 20px 9px #fff,0 0 38px 16px #ffe6a0}100%{transform:scale(0);opacity:0}}
+  .star.back{animation:fadein 1s ease forwards,tw ease-in-out infinite}
+  @keyframes fadein{from{opacity:0;transform:scale(.4)}to{opacity:.7;transform:scale(1)}}
+  .wrap{max-width:560px;margin:0 auto;position:relative;z-index:1}
+  header{padding:42px 4px 12px;text-align:center}
+  .eyebrow{font-family:"Space Mono",monospace;font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);opacity:.85}
+  h1{font-family:"Unbounded",sans-serif;font-weight:700;font-size:clamp(25px,7vw,35px);line-height:1.05;margin:11px 0 8px;background:linear-gradient(180deg,#fff,#cfe2ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--muted);font-size:13.5px;line-height:1.5;max-width:35ch;margin:0 auto}
+  .score{position:sticky;top:8px;z-index:30;margin:14px 0 4px;padding:9px 14px;border-radius:999px;background:rgba(10,9,25,.85);backdrop-filter:blur(8px);border:1px solid var(--line);font-family:"Space Mono",monospace;font-size:12px;text-align:center;letter-spacing:.05em}
+  .score b{color:var(--accent)}
+  .card{border:1px solid color-mix(in srgb,var(--c) 26%,transparent);background:linear-gradient(180deg,color-mix(in srgb,var(--c) 6%,transparent),var(--surf));border-radius:16px;margin:13px 0;padding:16px}
+  .qhead{display:flex;gap:10px;align-items:flex-start;margin-bottom:6px}
+  .ico{font-size:20px;flex:0 0 auto;margin-top:1px}
+  .qt{font-size:15.5px;font-weight:600;line-height:1.32}
+  .qtype{font-family:"Space Mono",monospace;font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint);margin:2px 0 11px 30px}
+  .opt{width:100%;text-align:left;font-family:inherit;font-size:14px;line-height:1.35;padding:11px 13px;border-radius:11px;cursor:pointer;color:var(--ink);background:var(--surf);border:1px solid var(--line);transition:.15s;display:flex;gap:9px;align-items:flex-start}
+  .opt:hover{border-color:color-mix(in srgb,var(--c) 50%,transparent)}
+  .opt .mk{font-family:"Space Mono",monospace;font-size:13px;opacity:.6;flex:0 0 auto;width:1.2em}
+  .opt.sel{border-color:var(--c);background:color-mix(in srgb,var(--c) 14%,transparent)}
+  .locked .opt{cursor:default}
+  .opt.correct{background:color-mix(in srgb,var(--ok) 20%,transparent);border-color:var(--ok)}
+  .opt.wrong{background:color-mix(in srgb,var(--no) 18%,transparent);border-color:var(--no)}
+  .opt.miss{border-color:var(--miss);border-style:dashed;background:color-mix(in srgb,var(--miss) 12%,transparent)}
+  .optwrap{margin-bottom:8px}
+  .oexpl{display:none;font-size:12px;line-height:1.5;color:var(--muted);padding:7px 12px 2px 34px}
+  .locked .oexpl{display:block;animation:fade .3s ease both}
+  .oexpl .st{font-family:"Space Mono",monospace;font-size:10.5px;letter-spacing:.04em;margin-right:5px}
+  .oexpl.y .st{color:var(--ok)} .oexpl.n .st{color:var(--no)} .oexpl.m .st{color:var(--miss)} .oexpl.g .st{color:var(--ok)}
+  @keyframes fade{from{opacity:0;transform:translateY(-3px)}to{opacity:1}}
+  .check,.reveal,.retry{margin-top:6px;font-family:inherit;font-size:13px;font-weight:600;padding:10px 16px;border-radius:10px;cursor:pointer;color:#0a0a1f;background:var(--accent);border:0}
+  .check[disabled],.reveal[disabled]{opacity:.5;cursor:default}
+  textarea{width:100%;min-height:78px;resize:vertical;font-family:inherit;font-size:14px;line-height:1.45;color:var(--ink);background:var(--surf);border:1px solid var(--line);border-radius:11px;padding:11px;margin-bottom:8px}
+  textarea:focus{outline:none;border-color:var(--c)}
+  .modelans{display:none;font-size:13px;line-height:1.6;color:var(--muted);margin-top:8px;padding-left:12px;border-left:2px solid color-mix(in srgb,var(--ok) 45%,transparent)}
+  .modelans.show{display:block;animation:fade .3s ease both}
+  .modelans b{color:var(--ink)}
+
+  #results{display:none;margin-top:18px;text-align:center;padding:26px 18px;border-radius:18px;background:linear-gradient(180deg,rgba(255,210,122,.10),rgba(255,255,255,.02));border:1px solid rgba(255,210,122,.26)}
+  #results.show{display:block;animation:fade .4s ease both}
+  .rscore{font-family:"Space Mono",monospace;font-size:12px;letter-spacing:.1em;color:var(--accent)}
+  .rsprite{width:120px;height:auto;margin:10px auto 2px;display:block;image-rendering:pixelated}
+  .rchar{font-family:"Unbounded",sans-serif;font-weight:700;font-size:clamp(20px,5.4vw,27px);margin:2px 0 4px}
+  .rblurb{color:var(--muted);font-size:14px;line-height:1.6;max-width:36ch;margin:6px auto 0}
+  .retry{margin-top:18px}
+
+  .capyq{margin-top:24px;font-size:14px;color:var(--ink);font-weight:600}
+  .scene{position:relative;width:200px;height:210px;margin:6px auto 0;cursor:pointer}
+  .scene svg.capy{position:absolute;left:24px;top:58px;width:152px;height:auto;image-rendering:pixelated;transition:transform .5s ease;z-index:2}
+  .scene.splash svg.capy{transform:translateY(16px)}
+  .peach{position:absolute;left:50%;top:34px;transform:translateX(-50%) scale(0);transform-origin:bottom center;z-index:4;width:34px;height:auto}
+  .scene.splash .peach{animation:peachpop .5s cubic-bezier(.34,1.7,.5,1) .15s forwards}
+  @keyframes peachpop{to{transform:translateX(-50%) scale(1)}}
+  .water{position:absolute;left:6px;bottom:6px;width:188px;height:80px;border-radius:50%/26px;background:radial-gradient(ellipse at 50% 0,rgba(95,200,230,.45),rgba(55,150,210,.32) 70%,transparent);overflow:hidden;opacity:0;transition:opacity .5s ease;z-index:1}
+  .scene.splash .water{opacity:1}
+  .bub{position:absolute;bottom:6px;border-radius:50%;background:rgba(255,255,255,.7);box-shadow:0 0 4px rgba(255,255,255,.5)}
+  .scene.splash .bub{animation:rise 2.6s linear infinite}
+  @keyframes rise{0%{transform:translateY(0);opacity:0}15%{opacity:.9}100%{transform:translateY(-64px);opacity:0}}
+  .fw{position:absolute;width:6px;height:6px;border-radius:50%;opacity:0;z-index:5}
+  .scene.splash .fw{animation:fwb 1.6s ease-out infinite}
+  @keyframes fwb{0%{transform:scale(.2);opacity:1;box-shadow:0 0 0 0 currentColor}60%{opacity:.9}100%{transform:scale(1);opacity:0;box-shadow:0 -22px 0 -2px currentColor,0 22px 0 -2px currentColor,22px 0 0 -2px currentColor,-22px 0 0 -2px currentColor,16px 16px 0 -2px currentColor,-16px 16px 0 -2px currentColor,16px -16px 0 -2px currentColor,-16px -16px 0 -2px currentColor}}
+
+  .confetti{position:fixed;width:9px;height:13px;z-index:60;pointer-events:none;border-radius:2px;animation:cfly .9s ease-out forwards}
+  @keyframes cfly{0%{transform:translate(0,0) rotate(0);opacity:1}100%{transform:translate(var(--tx),var(--ty)) rotate(var(--rot));opacity:0}}
+  footer{text-align:center;margin-top:24px;color:var(--faint);font-family:"Space Mono",monospace;font-size:10px;letter-spacing:.08em}
+  :focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:8px}
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.001s!important}.scene.splash .peach{transform:translateX(-50%) scale(1)}}
+</style>
+</head>
+<body>
+<div id="stars"></div>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">безумные идеи · викторина 3.0</div>
+    <h1>Угадай и проверь</h1>
+    <p class="sub">15 вопросов из твоих заметок. Где-то один ответ, где-то несколько, где-то пишешь сам. А на фоне — нажми на звезду.</p>
+  </header>
+  <div class="score" id="score">Счёт: <b id="sc">0</b> / 15</div>
+  <div id="quiz"></div>
+
+  <div id="results">
+    <div class="rscore" id="rscore"></div>
+    <svg class="rsprite" id="rsprite" viewBox="-1.5 -6 16 19.5" shape-rendering="crispEdges"></svg>
+    <div class="rchar" id="rchar"></div>
+    <div class="rblurb" id="rblurb"></div>
+
+    <div class="capyq">Понравился квиз? Нажми на капибару 🦫</div>
+    <div class="scene" id="scene" title="нажми меня">
+      <div class="water" id="water"></div>
+      <svg class="capy" id="capy" viewBox="0 0 16 11" shape-rendering="crispEdges"></svg>
+      <svg class="peach" viewBox="0 0 12 13">
+        <path d="M6 1 C7 0 9 0 9 2" fill="none" stroke="#4a8a3a" stroke-width="1"/>
+        <ellipse cx="4" cy="3" rx="2.4" ry="1.5" fill="#7bc04a"/>
+        <circle cx="6" cy="8" r="4.6" fill="#ff9e6b"/>
+        <path d="M6 4 Q6.2 8 6 12" stroke="#e07a4a" stroke-width=".8" fill="none"/>
+        <ellipse cx="4.3" cy="6.4" rx="1.3" ry="1" fill="#ffc0a0" opacity=".8"/>
+      </svg>
+    </div>
+
+    <button class="retry" onclick="location.reload()">Перепройти 🔄</button>
+  </div>
+
+  <footer>15 ВОПРОСОВ · ПСИХОТИП ПО СМЕШАРИКАМ</footer>
+</div>
+
+<script>
+  var Q = [
+    {ico:"🧠",type:"single",q:"Левши умнее, и можно ли поумнеть, тренируя другую руку?",opts:[
+      {t:"Да, левши заметно умнее, и переучивание поднимает интеллект",ok:false,e:"Сильной связи леворукости с интеллектом наука не находит, и переучивание руки IQ не поднимает."},
+      {t:"Связь слабая и в основном миф; рука интеллект не поднимает",ok:true,e:"Лишь слабые различия в латерализации мозга; тренировка руки развивает моторику, но не делает умнее. Кстати, Лосяш — амбидекстр и пишет обеими руками."},
+      {t:"Правши умнее — левшам мешает мир под правшей",ok:false,e:"И это не подтверждается; гипотеза про мир под правшей любопытна, но недоказана."}]},
+    {ico:"🔦",type:"single",q:"Лампочка в дальнем конце, стены тоннеля сужаются. Что со светом?",opts:[
+      {t:"Сужение концентрирует свет к узкому концу — как световод",ok:true,e:"Сужающийся зеркальный тоннель работает как концентратор, сводя лучи к узкому концу."},
+      {t:"Свет застревает в широкой части",ok:false,e:"Свет не «застревает» в объёме — он отражается и движется к сужению."},
+      {t:"Сужение полностью гасит свет",ok:false,e:"Гаснет он от поглощения при отражениях, а не от формы; без идеальных зеркал — быстро."}]},
+    {ico:"🛰️",type:"single",q:"Какие часы в космосе «не отстанут» от земного времени?",opts:[
+      {t:"«Антигравитационный» механизм спасёт от замедления",ok:false,e:"Иммунного к гравитации механизма не бывает — замедляется само время, а не детали часов."},
+      {t:"Электронные, синхронизируемые с Землёй",ok:false,e:"Хитрый случай: они не «не замедляются» — они ПОКАЗЫВАЮТ земное время (с задержкой сигнала), а их собственный генератор тикает медленнее, как и всё там. Это не иммунитет, а постоянная корректировка."},
+      {t:"Никакие — любые часы в одной точке идут одинаково",ok:true,e:"Механические, электронные, атомные замедляются одинаково: меняется время, а не механизм. «Не отстать» можно лишь показывая чужие (земные) часы."},
+      {t:"Механические отстанут, а электронные нет",ok:false,e:"Тип механизма не важен — дилатация одинакова для всех."}]},
+    {ico:"🔊",type:"single",q:"Можно ли отклонить звук, пустив другой перпендикулярно?",opts:[
+      {t:"Да, волны столкнутся и отклонят друг друга",ok:false,e:"В обычном воздухе звук линеен — волны не отклоняют друг друга."},
+      {t:"Нет — в воздухе они пройдут друг сквозь друга",ok:true,e:"Это суперпозиция: волны складываются в точке встречи, а потом летят дальше каждая своим путём."},
+      {t:"Они полностью погасят друг друга",ok:false,e:"Лишь локально и на миг (интерференция в точке), но дальше обе продолжают путь."}]},
+    {ico:"🎙️",type:"single",q:"Почему голос издалека или в эхе звучит «по-другому»?",opts:[
+      {t:"Меняется высота (частота) звука",ok:false,e:"Частота не меняется, если нет движения (эффекта Доплера)."},
+      {t:"Высота та же — теряются высокие частоты, звук глуше",ok:true,e:"Высокие частоты быстрее затухают и поглощаются → меняется тембр, а не высота."},
+      {t:"Звук замедляется и «тяжелеет»",ok:false,e:"Скорость звука от расстояния так не падает, а «тяжесть» — это про тембр."}]},
+    {ico:"🎞️",type:"multi",q:"Отметь ВСЁ верное: 3 фильма по 1 кадру по очереди, 24 к/с.",opts:[
+      {t:"Получится мельтешащая каша",ok:true,e:"Мозг сливает три потока в один, как тройная экспозиция."},
+      {t:"Можно вниманием переключаться на один фильм",ok:false,e:"Внимание цепляется за признак (цвет, лицо, место), а тут все три занимают весь кадр без зацепки."},
+      {t:"Каждый фильм будет ещё и дёргаться",ok:true,e:"На ~8 к/с движение каждого фильма ниже порога плавности."}]},
+    {ico:"🌀",type:"single",q:"Почему быстрый вентилятор кажется крутящимся назад?",opts:[
+      {t:"Глаза устают и инвертируют картинку",ok:false,e:"Дело не в усталости глаз."},
+      {t:"Алиасинг: мерцание света или кадры совпадают с вращением",ok:true,e:"Стробоскопический эффект — ты видишь только выхваченные положения лопастей."},
+      {t:"Лопасти реально замедляются",ok:false,e:"Скорость лопастей не меняется, меняется то, что ты выхватываешь."}]},
+    {ico:"⏸️",type:"multi",q:"Отметь ВСЁ верное: если остановить время и двигаться в нём.",opts:[
+      {t:"Ослепнешь и оглохнешь — фотоны и звук застыли",ok:true,e:"Без движения времени новые фотоны не долетают до глаз, а звук застыл."},
+      {t:"Не сможешь воздействовать на мир",ok:true,e:"Без электромагнитного взаимодействия атомы не отталкиваются."},
+      {t:"Скорее всего пройдёшь сквозь материю",ok:true,e:"Без отталкивания атомов опоры под тобой нет."},
+      {t:"Будешь спокойно трогать предметы, как в кино",ok:false,e:"Именно это и не сработает — нечем толкать и не от чего отталкиваться."}]},
+    {ico:"🖼️",type:"single",q:"Видео из фото: тонкие рёбра под углами показывают разные кадры при наклоне?",opts:[
+      {t:"Нет, это физически невозможно",ok:false,e:"Очень даже возможно."},
+      {t:"Да — это лентикулярная печать",ok:true,e:"Линзы-рёбра шлют разные кадры в разные углы. Оптический принцип восходит к интегральной фотографии Габриэля Липпмана (1908)."},
+      {t:"Только на экране, не на бумаге",ok:false,e:"Это как раз печатная, бумажная технология."}]},
+    {ico:"♾️",type:"single",q:"Возможен ли вечный двигатель? И люди (через размножение)?",opts:[
+      {t:"Да, при идеальных материалах",ok:false,e:"Проблема не в материалах, а в законах термодинамики (Карно, Клаузиус, Кельвин)."},
+      {t:"Нет — нарушает термодинамику; люди тоже не он",ok:true,e:"Отдавать больше, чем получаешь, нельзя. Размножение не творит энергию из ничего — нужна еда (в итоге Солнце)."},
+      {t:"Люди — да, ведь рождают всё больше людей",ok:false,e:"Каждый человек потребляет энергию; размножение перестраивает материю, а не творит её."}]},
+    {ico:"🤖",type:"single",q:"Можно ли сделать робота, делающего таких же роботов?",opts:[
+      {t:"Нет, это логически невозможно",ok:false,e:"Фон Нейман ещё в 1940-х доказал, что логически — возможно."},
+      {t:"Логически да; на практике мешает микроэлектроника",ok:true,e:"Это самовоспроизводящийся автомат фон Неймана. Части цепочки реальны, но замкнуть круг без человека (особенно чипы) пока никто не смог."},
+      {t:"Уже есть полностью самовоспроизводящиеся роботы",ok:false,e:"Пока нет: есть лишь куски — сборка на заводах, модульная самосборка."}]},
+    {ico:"🌡️",type:"single",q:"Почему в холодном климате меньше гниения и инфекций?",opts:[
+      {t:"Холодные страны просто чище по натуре",ok:false,e:"Дело не в «чистоте» стран — это стереотип."},
+      {t:"В тепле активнее микробы; плюс санитария и экономика",ok:true,e:"Тепло и влага разгоняют микробов и разлагателей; а болезни решают условия и санитария, не «характер» места."},
+      {t:"Жара сама по себе порождает болезни",ok:false,e:"Не сама жара, а среда для микробов плюс социальные факторы."}]},
+    {ico:"🕳️",type:"multi",q:"Ты летишь к чёрной дыре. Отметь ВСЕ верные утверждения.",opts:[
+      {t:"Рядом с ЧД твоё время идёт медленнее, чем на Земле",ok:true,e:"Сильная гравитация замедляет время (Эйнштейн)."},
+      {t:"Субъективно ты проживёшь больше лет, чем дома",ok:false,e:"Проживёшь те же годы — просто Земля уйдёт вперёд."},
+      {t:"Вернувшись, окажешься в будущем Земли",ok:true,e:"Это билет в будущее в один конец."},
+      {t:"Так же можно слетать и в прошлое",ok:false,e:"В будущее — да, в прошлое — нет."},
+      {t:"Часы там сломаются и начнут врать",ok:false,e:"Они идут верно, просто медленнее — по местному времени."}]},
+    {ico:"💗",type:"text",q:"Напиши своими словами: чем влюблённость отличается от любви? Потом тапни «Показать», чтобы сравнить.",
+      answer:"Влюблённость — во многом нейрохимия (дофамин, окситоцин и др.): вспышка, которая может временно перекрывать твои обычные предпочтения (лимеренция). Любовь шире — это привязанность, близость и осознанный выбор укреплять общее счастье. По нейробиологии (Хелен Фишер) это различимые системы — влечение, романтическое притяжение, привязанность, — но они взаимосвязаны, а не изолированы."},
+    {ico:"⏰",type:"single",q:"Можно ли построить машину времени в ПРОШЛОЕ?",opts:[
+      {t:"Да, так же как и в будущее",ok:false,e:"В будущее можно (замедление времени), а в прошлое — нет."},
+      {t:"В будущее — можно, в прошлое — запрещено известной физикой",ok:true,e:"В будущее реально (Эйнштейн); в прошлое противоречит причинности. Лазейки на бумаге (червоточины, замкнутые петли времени Гёделя) требуют экзотической материи и, видимо, невозможны. А как шутил Лосяш — в экспериментальной физике машину времени из часов делают на каждом шагу."},
+      {t:"Нельзя ни в будущее, ни в прошлое",ok:false,e:"В будущее — вполне, это и есть замедление времени."}]}
+  ];
+
+  var TOTAL = Q.length, score = 0, answered = 0;
+  var letters = ["A","B","C","D","E"];
+  var quiz = document.getElementById('quiz');
+
+  function confettiAt(el){
+    var r=el.getBoundingClientRect(), cx=r.left+r.width/2, cy=r.top+r.height/2;
+    var cols=["#FFD27A","#6EE7A8","#8FC9FF","#FF7A5C","#C77DFF","#fff"];
+    for(var i=0;i<26;i++){var p=document.createElement('div');p.className='confetti';
+      p.style.left=cx+'px';p.style.top=cy+'px';p.style.background=cols[i%cols.length];
+      p.style.setProperty('--tx',(Math.random()*300-150).toFixed(0)+'px');
+      p.style.setProperty('--ty',(Math.random()*-200-30).toFixed(0)+'px');
+      p.style.setProperty('--rot',(Math.random()*720-360).toFixed(0)+'deg');
+      document.body.appendChild(p);
+      setTimeout((function(n){return function(){n.remove();};})(p),950);}
+  }
+  function bump(){ answered++; document.getElementById('sc').textContent=score; if(answered===TOTAL) showResults(); }
+
+  Q.forEach(function(item,qi){
+    var card=document.createElement('div');card.className='card';card.id='card'+qi;
+    var tl=item.type==='single'?'один ответ':item.type==='multi'?'несколько ответов':'ответ текстом';
+    var h='<div class="qhead"><span class="ico">'+item.ico+'</span><span class="qt">'+item.q+'</span></div><div class="qtype">'+tl+'</div>';
+    if(item.type==='text'){
+      h+='<textarea id="ta'+qi+'" placeholder="Пиши здесь..."></textarea><button class="reveal" data-q="'+qi+'">Показать ответ</button><div class="modelans" id="ma'+qi+'"><b>Сравни:</b> '+item.answer+'</div>';
+    } else {
+      item.opts.forEach(function(o,oi){h+='<div class="optwrap"><button class="opt" data-q="'+qi+'" data-o="'+oi+'"><span class="mk">'+letters[oi]+'</span><span>'+o.t+'</span></button><div class="oexpl" id="ex'+qi+'_'+oi+'"></div></div>';});
+      if(item.type==='multi') h+='<button class="check" data-q="'+qi+'">Проверить</button>';
+    }
+    card.innerHTML=h; quiz.appendChild(card);
+  });
+
+  function setExpl(qi,oi,cls,status,text){
+    var d=document.getElementById('ex'+qi+'_'+oi);
+    d.className='oexpl '+cls;
+    d.innerHTML='<span class="st">'+status+'</span>'+text;
+  }
+
+  document.querySelectorAll('.card .opt').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var qi=+btn.dataset.q,oi=+btn.dataset.o,item=Q[qi],card=document.getElementById('card'+qi);
+      if(item.type==='single'){
+        if(card.classList.contains('locked'))return;
+        card.classList.add('locked');
+        var btns=card.querySelectorAll('.opt');
+        item.opts.forEach(function(o,k){
+          if(o.ok){btns[k].classList.add('correct');setExpl(qi,k,'y','✓ Верный ответ',o.e);}
+          else if(k===oi){btns[k].classList.add('wrong');setExpl(qi,k,'n','✗ Твой выбор',o.e);}
+          else setExpl(qi,k,'n','',o.e);
+        });
+        if(item.opts[oi].ok){score++;confettiAt(btns[oi]);}
+        bump();
+      } else { if(!card.classList.contains('locked')) btn.classList.toggle('sel'); }
+    });
+  });
+
+  document.querySelectorAll('.card .check').forEach(function(cb){
+    cb.addEventListener('click',function(){
+      var qi=+cb.dataset.q,item=Q[qi],card=document.getElementById('card'+qi);
+      if(card.classList.contains('locked'))return;
+      card.classList.add('locked');cb.disabled=true;
+      var btns=card.querySelectorAll('.opt'),perfect=true;
+      item.opts.forEach(function(o,k){
+        var sel=btns[k].classList.contains('sel');
+        if(o.ok&&sel){btns[k].classList.add('correct');setExpl(qi,k,'y','✓ Верно отмечено',o.e);}
+        else if(o.ok&&!sel){btns[k].classList.add('miss');setExpl(qi,k,'m','✗ Пропущено (надо было отметить)',o.e);perfect=false;}
+        else if(!o.ok&&sel){btns[k].classList.add('wrong');setExpl(qi,k,'n','✗ Зря отмечено',o.e);perfect=false;}
+        else setExpl(qi,k,'g','✓ Верно пропущено',o.e);
+      });
+      if(perfect){score++;confettiAt(cb);}
+      bump();
+    });
+  });
+
+  document.querySelectorAll('.card .reveal').forEach(function(rb){
+    rb.addEventListener('click',function(){
+      var qi=+rb.dataset.q,card=document.getElementById('card'+qi);
+      if(card.classList.contains('locked'))return;
+      card.classList.add('locked');rb.disabled=true;
+      document.getElementById('ma'+qi).classList.add('show');
+      score++;confettiAt(rb);bump();
+    });
+  });
+
+  // ===== Smeshariki pixel sprites =====
+  function rc(x,y,w,h,c){return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+'" fill="'+c+'"/>';}
+  function ballPix(c){var s='';for(var y=0;y<13;y++)for(var x=0;x<13;x++){var dx=x-6,dy=y-6;if(dx*dx+dy*dy<=41)s+=rc(x,y,1.02,1.02,c);}return s;}
+  function eyesPix(){return rc(3,4,2.1,2.1,'#fff')+rc(8,4,2.1,2.1,'#fff')+rc(4.2,5,1.05,1.05,'#222')+rc(7.9,5,1.05,1.05,'#222');}
+  var CH={
+    losyash:{n:"Лосяш",e:"🫎",col:"#e6c95e",eyes:1,
+      pix:rc(2.5,-5,1,5,'#9a7b3a')+rc(9.5,-5,1,5,'#9a7b3a')+rc(1,-4,1.6,1,'#9a7b3a')+rc(2,-3,1,1,'#9a7b3a')+rc(10.4,-4,1.6,1,'#9a7b3a')+rc(10,-3,1,1,'#9a7b3a')+rc(1.5,-2,1,1,'#9a7b3a')+rc(11,-2,1,1,'#9a7b3a'),
+      svg:'<circle cx="4.2" cy="5" r="2" fill="none" stroke="#5a4a25" stroke-width=".5"/><circle cx="8.8" cy="5" r="2" fill="none" stroke="#5a4a25" stroke-width=".5"/><line x1="6.2" y1="5" x2="6.8" y2="5" stroke="#5a4a25" stroke-width=".5"/>'},
+    pin:{n:"Пин",e:"🐧",col:"#2e2e44",eyes:0,
+      pix:rc(4,6,5,4,'#eef0f6')+rc(5,10,3,1,'#eef0f6')+rc(1.5,1,10,1.7,'#3a8a6a'),
+      svg:'<polygon points="5.2,5.6 8,5.6 6.6,7.3" fill="#f0a032"/><circle cx="4.3" cy="3.4" r="1.5" fill="#bfe0ff" stroke="#26263a" stroke-width=".4"/><circle cx="8.7" cy="3.4" r="1.5" fill="#bfe0ff" stroke="#26263a" stroke-width=".4"/>'},
+    karkarych:{n:"Кар-Карыч",e:"🐦‍⬛",col:"#5a5a85",eyes:1,
+      pix:rc(3.5,-3,6,4,'#3a3a2e')+rc(2,0.4,9,1,'#2e2e24')+rc(2,9.4,9,1.4,'#b83c34'),
+      svg:'<polygon points="4.8,5.6 8,5.6 6.4,7.6" fill="#e0a838"/>'},
+    sovunya:{n:"Совунья",e:"🦉",col:"#9a7ac0",eyes:0,
+      pix:rc(2,-1,1.4,2.4,'#9a7ac0')+rc(9.6,-1,1.4,2.4,'#9a7ac0'),
+      svg:'<circle cx="4.4" cy="5" r="2.4" fill="#fff" stroke="#5a4a78" stroke-width=".5"/><circle cx="8.6" cy="5" r="2.4" fill="#fff" stroke="#5a4a78" stroke-width=".5"/><circle cx="4.7" cy="5.2" r=".95" fill="#222"/><circle cx="8.3" cy="5.2" r=".95" fill="#222"/><polygon points="6,5.6 7,5.6 6.5,6.8" fill="#e0a838"/>'},
+    yozhik:{n:"Ёжик",e:"🦔",col:"#b4a2d6",eyes:1,
+      pix:rc(5,-2,1,2,'#6f5f98')+rc(7,-2,1,2,'#6f5f98')+rc(3,-1,1,2,'#6f5f98')+rc(9,-1,1,2,'#6f5f98')+rc(1,2,1,1,'#6f5f98')+rc(0,4,1,1,'#6f5f98')+rc(11,2,1,1,'#6f5f98')+rc(12,4,1,1,'#6f5f98'),
+      svg:'<circle cx="4.2" cy="5.1" r="1.9" fill="none" stroke="#3a3050" stroke-width=".5"/><circle cx="8.8" cy="5.1" r="1.9" fill="none" stroke="#3a3050" stroke-width=".5"/><line x1="6.1" y1="5.1" x2="6.9" y2="5.1" stroke="#3a3050" stroke-width=".5"/>'},
+    kopatych:{n:"Копатыч",e:"🐻",col:"#cf9a4e",eyes:1,
+      pix:rc(2,-1,3,3,'#cf9a4e')+rc(8,-1,3,3,'#cf9a4e')+rc(2.8,-0.2,1.2,1.2,'#a06a2a')+rc(8.8,-0.2,1.2,1.2,'#a06a2a')+rc(4,7,5,3,'#e6b878')+rc(6,7,2,1,'#3a2a18'),svg:''},
+    barash:{n:"Бараш",e:"🐑",col:"#c4b3e0",eyes:1,
+      pix:rc(2,-1,2.2,2.2,'#dccdec')+rc(5,-2,2.2,2.2,'#dccdec')+rc(8,-1,2.2,2.2,'#dccdec')+rc(0,3,2,2,'#dccdec')+rc(11,3,2,2,'#dccdec'),
+      svg:'<path d="M2 1 q-2 0 -2 2" fill="none" stroke="#9a8a6a" stroke-width=".7"/><path d="M11 1 q2 0 2 2" fill="none" stroke="#9a8a6a" stroke-width=".7"/>'},
+    nyusha:{n:"Нюша",e:"🐷",col:"#f2a6c6",eyes:1,
+      pix:rc(5.4,-2.4,2,2.2,'#f2a6c6')+rc(6,-3.4,1,1.2,'#f2a6c6')+rc(4,7,5,3,'#e888ae')+rc(5,8,1,1,'#7a3a55')+rc(8,8,1,1,'#7a3a55'),
+      svg:'<line x1="3" y1="3.6" x2="2.3" y2="3" stroke="#7a3a55" stroke-width=".4"/><line x1="10.2" y1="3.6" x2="10.9" y2="3" stroke="#7a3a55" stroke-width=".4"/>'},
+    krosh:{n:"Крош",e:"🐰",col:"#8fd4e8",eyes:1,
+      pix:rc(3,-5,2,6,'#8fd4e8')+rc(8,-5,2,6,'#8fd4e8')+rc(3.4,-4,1,3,'#f2acc4')+rc(8.4,-4,1,3,'#f2acc4'),svg:''}
+  };
+  function spriteSVG(id){var c=CH[id];return c.pix+ballPix(c.col)+(c.eyes?eyesPix():'')+(c.svg||'');}
+  // note: pix(features) drawn first behind ball for ears/antlers behind head feel; ball then eyes then svg overlays
+
+  var R={
+    15:["losyash","Безупречно! Чистый Лосяш: знает всё от астрономии до химии и явно метит на Нобелевку."],
+    14:["pin","Почти идеально. Гениальный изобретатель Пин — собрал бы машину времени из тостера."],
+    13:["karkarych","Эрудит Кар-Карыч: повидал мир и не прочь поучить остальных жизни. И, кажется, прав."],
+    12:["sovunya","Рассудительная Совунья: и науку знает, и как правильно дышать подскажет."],
+    11:["yozhik","Умный и аккуратный Ёжик: всё по полочкам, а редкие промахи прямо обидны."],
+    10:["kopatych","Копатыч: крепкая житейская логика. В критический момент мыслит трезво, «огого!»."],
+    9:["barash","Бараш-поэт: чувствуешь тонко и образно, но местами витаешь в облаках."],
+    8:["nyusha","Любопытная Нюша: схватываешь на лету, но иногда веришь тому, что покрасивее."],
+    7:["nyusha","Нюша в режиме «и так сойдёт»: чутьё есть, но пара вариантов тебя обаяли зря."],
+    6:["krosh","Крош на скорости: энергии вагон, но кое-где ответил раньше, чем дочитал."],
+    5:["krosh","Крош-весельчак: скакал по вариантам бодро. Точность подтянем на перепрохождении."],
+    4:["krosh","Крош, ёлки-иголки! Где-то повезло, где-то нет, но было весело."],
+    3:["krosh","Чистый азарт. Знания — дело наживное, главное не унывать."],
+    2:["krosh","Скорее за компанию, чем за зачёт — но смелость города берёт."],
+    1:["krosh","Один балл, зато с настроением Кроша. Перепройди и отыграйся!"],
+    0:["krosh","Ноль — но ты дошёл до конца, это уже по-крошьи отважно. Реванш?"]
+  };
+  function showResults(){
+    var r=R[score]||R[0], c=CH[r[0]];
+    document.getElementById('rscore').textContent='Ты набрал '+score+' / '+TOTAL;
+    document.getElementById('rsprite').innerHTML=spriteSVG(r[0]);
+    document.getElementById('rchar').innerHTML=c.e+' Твой психотип — '+c.n;
+    document.getElementById('rblurb').textContent=r[1];
+    var res=document.getElementById('results');res.classList.add('show');
+    res.scrollIntoView({behavior:'smooth',block:'start'});
+  }
+
+  // ===== capybara =====
+  (function(){
+    var map=["................","....b......b....","..bbbbbbbbbbbb..",".bbbbbbbbbbbbbbb","bbbbbbbbbbbbbbbb","bbbbbbbbbbbebbbd","bbbbbbbbbbbbbbnd","llllllllllllllbd","llllllllllllllbb",".bb..bb..bb..bb.",".bb..bb..bb..bb."];
+    var COL={b:"#9b7b53",d:"#6e5436",e:"#241810",n:"#3a2a1a",l:"#b39468"},s="";
+    for(var y=0;y<map.length;y++){var row=map[y];for(var x=0;x<row.length;x++){var ch=row[x];if(ch===".")continue;s+=rc(x,y,1.02,1.02,COL[ch]);}}
+    document.getElementById('capy').innerHTML=s;
+  })();
+  (function(){var w=document.getElementById('water');for(var i=0;i<7;i++){var b=document.createElement('div');b.className='bub';var sz=(Math.random()*5+3).toFixed(0);b.style.width=sz+'px';b.style.height=sz+'px';b.style.left=(8+Math.random()*84).toFixed(0)+'%';b.style.animationDelay=(Math.random()*2.6).toFixed(2)+'s';w.appendChild(b);}})();
+  (function(){var sc=document.getElementById('scene'),cl=["#FFD27A","#FF7A5C","#8FC9FF"];[[36,26],[150,40]].forEach(function(p,i){var f=document.createElement('div');f.className='fw';f.style.left=p[0]+'px';f.style.top=p[1]+'px';f.style.color=cl[i%cl.length];f.style.animationDelay=(i*0.5)+'s';sc.appendChild(f);});})();
+  document.getElementById('scene').addEventListener('click',function(){this.classList.add('splash');});
+
+  // ===== floating stars =====
+  (function(){
+    var box=document.getElementById('stars');
+    for(var i=0;i<16;i++){
+      var s=document.createElement('div');s.className='star';
+      var sz=(Math.random()*2.5+2).toFixed(1);
+      s.style.width=sz+'px';s.style.height=sz+'px';
+      s.style.left=(Math.random()*100).toFixed(1)+'%';
+      s.style.top=(Math.random()*100).toFixed(1)+'%';
+      s.style.setProperty('--dx',(Math.random()*30-15).toFixed(0)+'px');
+      s.style.setProperty('--dy',(Math.random()*30-15).toFixed(0)+'px');
+      s.style.animationDuration=(Math.random()*8+10).toFixed(1)+'s,'+(Math.random()*3+2).toFixed(1)+'s';
+      s.addEventListener('click',function(){
+        var el=this; if(el.classList.contains('boom'))return;
+        el.classList.add('boom');
+        setTimeout(function(){el.style.visibility='hidden';},560);
+        setTimeout(function(){
+          el.classList.remove('boom');el.style.visibility='visible';
+          el.classList.add('back');
+          setTimeout(function(){el.classList.remove('back');},1000);
+        },5000);
+      });
+      box.appendChild(s);
+    }
+  })();
+</script>
+</body>
+</html>
